@@ -1,1 +1,3 @@
 Doktorat
+
+Author: Katarzyna Kraj
