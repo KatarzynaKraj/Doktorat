@@ -1,8 +1,13 @@
 rm(list = ls(environment()))
 library(dplyr)
 library(ggplot2)
+library(xlsx)
 
-setwd("D:\\Doktorat\\dane\\raba\\jednoskalowe\\treningowe_testowe\\")
+input_data_path <- "D:\\Doktorat\\dane\\pradnik\\jednoskalowe\\treningowe_testowe\\"
+output_data_path <- "D:\\Doktorat\\wyniki\\pradnik\\dane_wejsciowe\\"
+
+#set working directory
+setwd(input_data_path)
 
 #Read input data---------------------------------------------------------------------------------------
 #Classification
@@ -86,8 +91,8 @@ stat_proc_training_test_data
 
 #Create dataset divided into training/test and imperviousness index intervals
 #Data within breaks
-stat_breaks <- c(0, 0.0000000001, 0.2, 0.5, 1)
-stat_labels <- c("0%", "(0 - 20%)", "[20% - 50%)", "[50% - 100%]")
+stat_breaks <- c(0, 0.0000000001, 0.25, 0.5, 0.75, 1)
+stat_labels <- c("0%", "(0 - 25%)", "[25% - 50%)", "[50% - 75%)", "[75% - 100%]")
 
 proc_training_test_data_breaks <- proc_training_test_data %>%
                                 mutate(intervals = cut(nieprz_proc, 
@@ -161,13 +166,41 @@ p_boxplot <- p_boxplot + labs(y = "Percentage value of imperviousness index", x 
 p_boxplot
 
 
+#Save results------------------------------------------------------------------------------------------------------------------
+#set working directory
+setwd(output_data_path)
 
+#Save output files
+write.xlsx(stat_klas_training_test_data, 
+           file = "stat_klas_training_test_data.xlsx", 
+           col.names = TRUE, 
+           row.names = FALSE, 
+           append = FALSE)
 
+write.xlsx(stat_proc_training_test_data, 
+           file = "stat_proc_training_test_data.xlsx", 
+           col.names = TRUE, 
+           row.names = FALSE, 
+           append = FALSE)
 
+write.xlsx(stat_proc_training_test_data_breaks, 
+           file = "stat_proc_training_test_data_breaks.xlsx", 
+           col.names = TRUE, 
+           row.names = FALSE, 
+           append = FALSE)
 
+#Save plots
+ggsave(filename = "p_bar.pdf",
+       plot = p_bar,
+       device = "pdf",
+       width = 10, 
+       height = 5)
 
-
-
+ggsave(filename = "p_boxplot.pdf",
+       plot = p_boxplot,
+       device = "pdf",
+       width = 10, 
+       height = 5)
 
 
 
