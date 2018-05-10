@@ -10,9 +10,9 @@ setwd("D:\\Doktorat\\wyniki")
 #Set data 
 area <- "raba" #raba / pradnik
 scale <- "jednoskalowe" #jednoskalowe / wieloskalowe
-image_name <- "12_06_2010_28_08_2009" #12_06_2010_28_08_2009 / 12_06_2010 / 28_08_2009
-method <- "Klasyfikacja" #Klasyfikacja / Regresja
-algorythm <- "C50" #C50 / Cubist / Random_Forest
+image_name <- "28_08_2009" #12_06_2010_28_08_2009 / 12_06_2010 / 28_08_2009
+method <- "Regresja" #Klasyfikacja / Regresja
+algorythm <- "Random_Forest" #C50 / Cubist / Random_Forest
 
 
 
