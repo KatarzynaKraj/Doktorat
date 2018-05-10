@@ -1,0 +1,10 @@
+How to push code to the remore repository:
+
+1. Navigate to the directory
+2. Right-click and "Open Git Bash here"
+3. Type "git add ."
+4. Type "git commit -am '<<commit name>>'"
+5. Type "git push origin master"
+
+If you receive information that there is some other git process runing in the background, 
+wait couple of minutes or turn off the RStudio
