@@ -12,7 +12,7 @@ area <- "raba" #raba / pradnik
 scale <- "jednoskalowe" #jednoskalowe / wieloskalowe
 image_name <- "12_06_2010_28_08_2009" #12_06_2010_28_08_2009 / 12_06_2010 / 28_08_2009
 method <- "Klasyfikacja" #Klasyfikacja / Regresja
-algorythm <- "Random_Forest" #C50 / Cubist / Random_Forest
+algorythm <- "C50" #C50 / Cubist / Random_Forest
 
 
 
@@ -39,12 +39,26 @@ if (method == "Klasyfikacja" & algorythm == "C50") {
     filter(row_number() == 1) %>% 
     select(variant, mtry, Sens, Spec, Accuracy, ROC, Kappa, SensSD, SpecSD, AccuracySD, ROCSD, KappaSD) %>% 
     as.data.frame
-} else {
-  
-}
+} else if (method == "Regresja" & algorythm == "Cubist") {
+  stat <- crossvalidation_results %>%
+    group_by(variant) %>% 
+    arrange(variant,
+            RMSE) %>%
+    filter(row_number() == 1) %>% 
+    select(variant, committees, neighbors, RMSE, Rsquared, MAE, RMSESD, RsquaredSD, MAESD) %>% 
+    as.data.frame
+} else if (method == "Regresja" & algorythm == "Random_Forest") {
+  stat <- crossvalidation_results %>%
+    group_by(variant) %>% 
+    arrange(variant,
+            RMSE) %>%
+    filter(row_number() == 1) %>% 
+    select(variant, mtry, RMSE, Rsquared, MAE, RMSESD, RsquaredSD, MAESD) %>% 
+    as.data.frame
+} 
 
-write.xlsx(crossvalidation_summaries, 
-           file = paste(area, "\\wyniki_kroswalidacja\\", scale, "\\", method, "\\", algorythm, "\\", image_name, "\\all_variants_results.xlsx", sep = ""), 
-           col.names = TRUE, 
-           row.names = FALSE, 
+write.xlsx(stat,
+           file = paste(area, "\\wyniki_kroswalidacja\\", scale, "\\", method, "\\", algorythm, "\\", image_name, "\\best_tunning_parameters.xlsx", sep = ""),
+           col.names = TRUE,
+           row.names = FALSE,
            append = FALSE)
