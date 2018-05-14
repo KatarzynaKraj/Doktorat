@@ -2,7 +2,7 @@ rm(list = ls(environment())) #clear environment
 #cat("\014")  #clear console
 
 library(caret)
-library(C50)
+library(randomForest)
 library(doParallel)
 library(xlsx)
 registerDoParallel(12)
@@ -16,16 +16,16 @@ setwd("D:\\Doktorat\\dane")
 #Set data 
 area <- "raba" #raba / pradnik
 scale <- "jednoskalowe" #jednoskalowe / wieloskalowe
-image_name <- "12_06_2010_28_08_2009" #12_06_2010_28_08_2009 / 12_06_2010 / 28_08_2009
+image_name <- "28_08_2009" #12_06_2010_28_08_2009 / 12_06_2010 / 28_08_2009
 method <- "Klasyfikacja" #Klasyfikacja / Regresja
-algorythm <- "C50" #C50 / Cubist / Random_Forest
+algorythm <- "Random_Forest" #C50 / Cubist / Random_Forest
 list_of_variants <- 1:8
 
 
 
 #Classification -----------------------------------------------------------------------------------------------------------------------
 #Read the best tunning parameters
-tunning_parameters = read.xlsx(file = paste("D:\\Doktorat\\wyniki", area, "wyniki_kroswalidacja",scale,  "Klasyfikacja", "C50", image_name, "best_tunning_parameters.xlsx", sep = "\\"),
+tunning_parameters = read.xlsx(file = paste("D:\\Doktorat\\wyniki", area, "wyniki_kroswalidacja",scale,  method, algorythm, image_name, "best_tunning_parameters.xlsx", sep = "\\"),
                                sheetIndex = 1,
                                as.data.frame=TRUE, 
                                header=TRUE)
@@ -76,48 +76,44 @@ for (variant_id in list_of_variants) {
   variant_test_data <- test_data[ ,variant]
   
   #build single model based on training data
-  C50_model_tmp  = C5.0(x = variant_training_data[, -1],
-                      y = variant_training_data[, 1],
-                      trials = the_best_tunning_parameters$trials,
-                      rules = ifelse(the_best_tunning_parameters$model == "tree", FALSE, TRUE),
-                      weights = model_weights,
-                      control = C50::C5.0Control(noGlobalPruning = the_best_tunning_parameters$noGlobalPruning, 
-                                                 CF = the_best_tunning_parameters$CF,
-                                                 minCases = 2, 
-                                                 fuzzyThreshold = the_best_tunning_parameters$fuzzyThreshold))
+  RF_model_tmp  = randomForest(x = variant_training_data[, -1],
+                               y = variant_training_data[, 1],
+                               mtry = the_best_tunning_parameters$mtry,
+                               ntree = 1000)
+                               #classwt = model_weights)
   
   #classify training data using fitted model
-  predict_training_class_tmp <- predict(C50_model_tmp,
+  predict_training_class_tmp <- predict(RF_model_tmp,
                                         newdata = variant_training_data,
                                         type = "class")
-  predict_training_prob_tmp <- predict(C50_model_tmp,
+  predict_training_prob_tmp <- predict(RF_model_tmp,
                                        newdata = variant_training_data,
                                        type = "prob")
   write.xlsx(predict_training_class_tmp, 
-            file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  "Klasyfikacja", "C50", image_name, "predicted_training", paste("predict_training_class_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
+            file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  method, algorythm, image_name, "predicted_training", paste("predict_training_class_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
             col.names = FALSE,
             row.names = FALSE,
             append = FALSE)
   write.xlsx(predict_training_prob_tmp, 
-             file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  "Klasyfikacja", "C50", image_name, "predicted_training", paste("predict_training_prob_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
+             file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  method, algorythm, image_name, "predicted_training", paste("predict_training_prob_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
              col.names = TRUE,
              row.names = FALSE,
              append = FALSE)
   
   #classify test data using fitted model
-  predict_test_class_tmp<- predict(C50_model_tmp,
+  predict_test_class_tmp<- predict(RF_model_tmp,
                                    newdata = variant_test_data,
                                    type = "class")
-  predict_test_prob_tmp <- predict(C50_model_tmp,
+  predict_test_prob_tmp <- predict(RF_model_tmp,
                                    newdata = variant_test_data,
                                    type = "prob")
   write.xlsx(predict_test_class_tmp, 
-             file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  "Klasyfikacja", "C50", image_name, "predicted_test", paste("predict_test_class_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
+             file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  method, algorythm, image_name, "predicted_test", paste("predict_test_class_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
              col.names = FALSE,
              row.names = FALSE,
              append = FALSE)
   write.xlsx(predict_test_prob_tmp, 
-             file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  "Klasyfikacja", "C50", image_name, "predicted_test", paste("predict_test_prob_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
+             file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  method, algorythm, image_name, "predicted_test", paste("predict_test_prob_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
              col.names = TRUE,
              row.names = FALSE,
              append = FALSE)
@@ -133,12 +129,12 @@ for (variant_id in list_of_variants) {
                                                mode = "everything")
 
   write.xlsx(training_confusion_matrix_tmp$table, 
-            file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  "Klasyfikacja", "C50", image_name, "conf_m_training", paste("conf_matrix_training_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
+            file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  method, algorythm, image_name, "conf_m_training", paste("conf_matrix_training_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
             col.names = TRUE,
             row.names = FALSE,
             append = FALSE)
   write.xlsx(test_confusion_matrix_tmp$table, 
-             file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  "Klasyfikacja", "C50", image_name, "conf_m_test", paste("conf_matrix_test_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
+             file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  method, algorythm, image_name, "conf_m_test", paste("conf_matrix_test_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
              col.names = TRUE,
              row.names = FALSE,
              append = FALSE)
@@ -151,15 +147,15 @@ for (variant_id in list_of_variants) {
   Accuracy_stat_test  <- rbind(Accuracy_stat_test, 
                                Accuracy_stat_test_tmp)
   write.xlsx(as.data.frame(Accuracy_stat_test_tmp), 
-             file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  "Klasyfikacja", "C50", image_name, "Accuracy_statistics", paste("Accuracy_stat_test_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
+             file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  method, algorythm, image_name, "Accuracy_statistics", paste("Accuracy_stat_test_",toString(variant_id),".xlsx", sep = "") , sep = "\\"), 
              col.names = TRUE,
              row.names = FALSE,
              append = FALSE)
   
   
   
-  model_name <- paste("C50_model_", toString(variant_id), sep = "")
-  assign(model_name, C50_model_tmp)
+  model_name <- paste("RF_model_", toString(variant_id), sep = "")
+  assign(model_name, RF_model_tmp)
   
   predict_training_class_name <- paste("predict_training_class_", toString(variant_id), sep = "")
   assign(predict_training_class_name, predict_training_class_tmp)
@@ -185,7 +181,7 @@ for (variant_id in list_of_variants) {
 }
 
 write.xlsx(Accuracy_stat_test, 
-           file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  "Klasyfikacja", "C50", image_name, "Accuracy_statistics", "all_accuracy_statistics.xlsx", sep = "\\"), 
+           file = paste("D:\\Doktorat\\wyniki", area, "wyniki_testowe",scale,  method, algorythm, image_name, "Accuracy_statistics", "all_accuracy_statistics.xlsx", sep = "\\"), 
            col.names = TRUE,
            row.names = FALSE,
            append = FALSE)
